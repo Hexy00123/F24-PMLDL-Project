@@ -1,15 +1,4 @@
-torch
-transformers
-diffusers
-pandas
-matplotlib
-seaborn
-numpy
-requests
-bs4
-tqdm
-pillow 
-opencv-pythonbeautifulsoup4==4.12.3
+beautifulsoup4==4.12.3
 bs4==0.0.2
 certifi==2024.8.30
 charset-normalizer==3.3.2
