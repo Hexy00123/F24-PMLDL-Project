@@ -1,0 +1,12 @@
+torch
+transformers
+diffusers
+pandas
+matplotlib
+seaborn
+numpy
+requests
+bs4
+tqdm
+pillow 
+opencv-python
