@@ -1,0 +1,13 @@
+accelerate launch train_controlnet_sdxl.py \
+  --pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0" \
+  --controlnet_model_name_or_path="alimama-creative/EcomXL_controlnet_inpaint" \
+  --dataset_name="ThreeBibas/recipie-mask-image" \
+  --resolution=1024\
+  --train_batch_size=1 \
+  --gradient_accumulation_steps=1 \
+  --mixed_precision="fp16" \
+  --max_train_steps=1 \
+  --max_grad_norm=1 \
+  --lr_scheduler="constant" --lr_warmup_steps=0 \
+  --output_dir="sd-napitochki-controlnet" \
+  --push_to_hub \
