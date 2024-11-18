@@ -7,3 +7,11 @@ services:
       - "3000:3000"
     environment: 
       - NODE_ENV=development
+      - REACT_APP_SERVER_URL=http://localhost:3001
+
+  backend: 
+    build: 
+      dockerfile: ./backend/Dockerfile
+      context: .
+    ports: 
+      - "3001:8000"

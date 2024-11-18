@@ -15,7 +15,36 @@ const App = () => {
 
 	const generateImage = async (prompt, setPrompt) => {
 		console.log("DEBUG: generate image")
-		console.log(prompt)
+		console.log({ input: prompt })
+		console.log(process.env.REACT_APP_SERVER_URL)
+
+		try {
+			setIsGenerating(true);
+			const serverUrl = process.env.REACT_APP_SERVER_URL;
+			const response = await fetch(serverUrl + '/generate', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ input: prompt }), 
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to generate image');
+			}
+
+			const blob = await response.blob();
+			const imageUrl = URL.createObjectURL(blob);
+			setGeneratedImage({
+				photo: imageUrl,
+				altText: 'Generated Image',
+			});
+			setPrompt('');
+		} catch (error) {
+			console.error('Error generating image:', error);
+		} finally {
+			setIsGenerating(false);
+		}
 	};
 
 	return (
