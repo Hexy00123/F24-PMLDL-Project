@@ -13,57 +13,76 @@ const App = () => {
 		altText: null,
 	});
 
-	const generateImage = async (prompt, setPrompt, mask) => {
-		console.log("DEBUG: generate image")
-		console.log({ input: prompt, mask: mask})
-
-	
-		try { 
-			setIsGenerating(true);
-			const serverUrl = process.env.REACT_APP_SERVER_URL;
-			let maskFile = null;
-
-			if (['GOBLET', 'HIGHBALL', 'PARFAIT', 'FLUTE'].includes(mask)) {
-				const maskUrl = await import(`./assets/${mask}_mask.jpg`).then(module => module.default);
-				const maskResponse = await fetch(maskUrl);
-				maskFile = await maskResponse.blob();
-			}
-
-			const formData = new FormData();
-			console.log(maskFile);
-			console.log();
-
-			formData.append('input', prompt);
-			if (maskFile) {
-				formData.append('mask', maskFile, `${mask}_mask.jpg`);
-			}
-
-			console.log(formData); 
-			const response = await fetch(serverUrl + '/generate', {
-				method: 'POST',
-				body: formData,
-				headers: {
-					'Accept': 'multipart/form-data',
-				},
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to generate image');
-			}
-
-			const blob = await response.blob();
-			const imageUrl = URL.createObjectURL(blob);
-			setGeneratedImage({
-				photo: imageUrl,
-				altText: 'Generated Image',
-			});
-			setPrompt('');
-		} catch (error) {
-			console.error('Error generating image:', error);
-		} finally {
-			setIsGenerating(false);
+	const handleMaskFile = async (mask) => {
+		if (['GOBLET', 'HIGHBALL', 'PARFAIT', 'FLUTE'].includes(mask)) {
+		  const maskUrl = await import(`./assets/${mask}_mask.jpg`).then(module => module.default);
+		  const maskResponse = await fetch(maskUrl);
+		  return await maskResponse.blob();
+		} else if (mask === 'UPLOAD') {
+		  return new Promise((resolve) => {
+			const input = document.createElement('input');
+			input.type = 'file';
+			input.accept = '.jpg,.jpeg';
+			input.onchange = (event) => {
+			  const file = event.target.files[0];
+			  if (file) {
+				resolve(file);
+			  }
+			};
+			input.click();
+		  });
 		}
-	};
+		return null;
+	  };
+
+	  const submitFormData = async (prompt, maskFile, serverUrl, mask) => {
+		const formData = new FormData();
+		formData.append('input', prompt);
+		if (maskFile) {
+		  formData.append('mask', maskFile, `${mask}_mask.jpg`);
+		}
+	  
+		const response = await fetch(serverUrl + '/generate', {
+		  method: 'POST',
+		  body: formData,
+		  headers: {
+			'Accept': 'multipart/form-data',
+		  },
+		});
+	  
+		if (!response.ok) {
+		  throw new Error('Failed to generate image');
+		}
+	  
+		const blob = await response.blob();
+		return URL.createObjectURL(blob);
+	  };
+
+	  const generateImage = async (prompt, setPrompt, mask) => {
+		console.log("DEBUG: generate image");
+		console.log({ input: prompt, mask: mask });
+	  
+		try {
+		  setIsGenerating(true);
+		  const serverUrl = process.env.REACT_APP_SERVER_URL;
+		  let maskFile = await handleMaskFile(mask);
+	  
+		  if (mask === 'UPLOAD' && !maskFile) {
+			return; // Prevent further execution until file is selected
+		  }
+	  
+		  const imageUrl = await submitFormData(prompt, maskFile, serverUrl, mask);
+		  setGeneratedImage({
+			photo: imageUrl,
+			altText: 'Generated Image',
+		  });
+		  setPrompt('');
+		} catch (error) {
+		  console.error('Error generating image:', error);
+		} finally {
+		  setIsGenerating(false);
+		}
+	  };
 
 	return (
 		<div className='container'>
