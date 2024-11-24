@@ -13,20 +13,38 @@ const App = () => {
 		altText: null,
 	});
 
-	const generateImage = async (prompt, setPrompt) => {
+	const generateImage = async (prompt, setPrompt, mask) => {
 		console.log("DEBUG: generate image")
-		console.log({ input: prompt })
-		console.log(process.env.REACT_APP_SERVER_URL)
+		console.log({ input: prompt, mask: mask})
 
-		try {
+	
+		try { 
 			setIsGenerating(true);
 			const serverUrl = process.env.REACT_APP_SERVER_URL;
+			let maskFile = null;
+
+			if (['GOBLET', 'HIGHBALL', 'PARFAIT', 'FLUTE'].includes(mask)) {
+				const maskUrl = await import(`./assets/${mask}_mask.jpg`).then(module => module.default);
+				const maskResponse = await fetch(maskUrl);
+				maskFile = await maskResponse.blob();
+			}
+
+			const formData = new FormData();
+			console.log(maskFile);
+			console.log();
+
+			formData.append('input', prompt);
+			if (maskFile) {
+				formData.append('mask', maskFile, `${mask}_mask.jpg`);
+			}
+
+			console.log(formData); 
 			const response = await fetch(serverUrl + '/generate', {
 				method: 'POST',
+				body: formData,
 				headers: {
-					'Content-Type': 'application/json',
+					'Accept': 'multipart/form-data',
 				},
-				body: JSON.stringify({ input: prompt }), 
 			});
 
 			if (!response.ok) {

@@ -1,9 +1,12 @@
-from typing import Annotated
+from typing import Optional
 from pydantic import BaseModel
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import io
+
+# TODO: remove after model is added
+from PIL import Image
 
 class PromptBody(BaseModel):
     input: str
@@ -18,23 +21,33 @@ app.add_middleware(
     allow_headers=["*"], 
 )
 
-@app.get("/is_alive", tags="IsAlive")
-def predict():
+@app.get("/is_alive", tags=["IsAlive"])
+def is_alive():
     return "Don't worry, I'm ok)"
 
-@app.post("/generate", tags="Generate")
-def predict(prompt_body: Annotated[PromptBody, Body()]):
+@app.post("/generate", tags=["Generate"])
+async def generate(input: str = Form(...), mask: UploadFile = File(None)):
     # TODO: remove after model is added
+    print(input)
+        
+    image_stream = await mask.read()
+    image_stream = io.BytesIO(image_stream)
+    print('DEBUG: get image stream')
+    
+    image = Image.open(image_stream)
+    image = image.resize((512, 512))
+    print('DEBUG: resized image')
+    
+    image_stream = io.BytesIO()
+    image.save(image_stream, format='JPEG')
+    image_stream.seek(0)
+    print('DEBUG: converted image to bytes')
+    
     from time import sleep 
     sleep(2)
     
-    with open('src/temp_responce.jpg', mode='rb') as file: 
-        image = file.read()
-
-    image_stream = io.BytesIO(image)
-    # return {'input': prompt_body.input} 
     return StreamingResponse(image_stream, media_type="image/jpeg", headers={"Content-Disposition": "inline; filename=responce.jpg"})
 
-@app.options("/generate", tags="Generate")
+@app.options("/generate", tags=["Generate"])
 def options_generate():
     return {"message": "CORS preflight request handled"}
