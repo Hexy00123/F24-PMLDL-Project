@@ -18,7 +18,7 @@ const Form = ({ generateImage }) => {
                 </div>
 
                 <div className="container-title">
-                    <h1 className="title">Select this thing..</h1>
+                    <h1 className="title">Select drink mask</h1>
                 </div>
             <Checkbox />
                 <button className='btn' onClick={() => {
