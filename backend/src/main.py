@@ -35,7 +35,7 @@ async def generate(input: str = Form(...), mask: UploadFile = File(None)):
     print('DEBUG: get image stream')
     
     image = Image.open(image_stream)
-    image = image.resize((512, 512))
+    # image = image.resize((512, 512))
     print('DEBUG: resized image')
     
     image_stream = io.BytesIO()
@@ -47,7 +47,3 @@ async def generate(input: str = Form(...), mask: UploadFile = File(None)):
     sleep(2)
     
     return StreamingResponse(image_stream, media_type="image/jpeg", headers={"Content-Disposition": "inline; filename=responce.jpg"})
-
-@app.options("/generate", tags=["Generate"])
-def options_generate():
-    return {"message": "CORS preflight request handled"}
