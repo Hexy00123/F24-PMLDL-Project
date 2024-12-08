@@ -8,7 +8,7 @@ from transparent_background import Remover
 
 class Generator():
     def __init__(self):
-        controlnet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
+        controlnet = ControlNetModel.from_pretrained("ThreeBibas/sd1.5-canny-controlnet-napitochki-finetune-1", torch_dtype=torch.float16)
         self.pipe = StableDiffusionControlNetInpaintPipeline.from_pretrained("ThreeBibas/sd1.5-napitochki-finetune",
                                                                              torch_dtype=torch.float16,
                                                                              controlnet=controlnet).to("cuda")
@@ -19,8 +19,13 @@ class Generator():
     def __call__(self, image, prompt):
         torch.cuda.empty_cache()
         image = image.convert('RGB')
-        if image.width > 900:
-            image = image.resize((int(image.width / 2), int(image.height / 2)))
+
+        max_size = 720
+        if min(image.width, image.height) > max_size:
+            ratio = max_size / min(image.width, image.height)
+            new_size = (int(image.width * ratio), int(image.height * ratio))
+            image = image.resize(new_size)
+
         mask_real = self.remover.process(image, type='map')
         image = np.array(image)
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
