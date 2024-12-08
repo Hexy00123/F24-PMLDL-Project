@@ -76,7 +76,6 @@ const App = () => {
 			photo: imageUrl,
 			altText: 'Generated Image',
 		  });
-		  setPrompt('');
 		} catch (error) {
 		  console.error('Error generating image:', error);
 		} finally {
