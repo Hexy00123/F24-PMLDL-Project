@@ -17,9 +17,10 @@ class Generator():
         self.remover = Remover(mode='base')
 
     def __call__(self, image, prompt):
+        torch.cuda.empty_cache()
         image = image.convert('RGB')
         if image.width > 900:
-            img = image.resize((int(image.width / 2), int(image.height / 2)))
+            image = image.resize((int(image.width / 2), int(image.height / 2)))
         mask_real = self.remover.process(image, type='map')
         image = np.array(image)
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
