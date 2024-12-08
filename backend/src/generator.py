@@ -17,21 +17,23 @@ class Generator():
         self.remover = Remover(mode='base')
 
     def __call__(self, image, prompt):
+        image = image.convert('RGB')
         mask_real = self.remover.process(image, type='map')
+        image = np.array(image)
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        low_threshold = 150
-        high_threshold = 400
+        otsu_thresh, _ = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        high_threshold = otsu_thresh
+        low_threshold = 0.2 * otsu_thresh
+        canny_image = cv2.Canny(gray_image, int(low_threshold), int(high_threshold))
+        canny_image = canny_image[:, :, None]
+        canny_image = np.concatenate([canny_image, canny_image, canny_image], axis=2)
+        canny_image = Image.fromarray(canny_image)
 
-        image = cv2.Canny(np.array(image), low_threshold, high_threshold)
-        image = image[:, :, None]
-        image = np.concatenate([image, image, image], axis=2)
-        blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
-        canny = Image.fromarray(blurred_image)
 
-        white_img = Image.new('RGB', canny.size, color='white')
-        # torch.manual_seed(228)
-        # controlnet_conditioning_scale = 1.0
-        image = self.pipe(prompt=prompt, negative_prompt=self.negative_prompt, image=white_img, control_image=canny,
+        white_img = Image.new('RGB', canny_image.size, color='white')
+
+        image = self.pipe(prompt=prompt, negative_prompt=self.negative_prompt, image=white_img, control_image=canny_image,
                           mask_image=mask_real, num_images_per_prompt=1).images[0]
 
         return image
